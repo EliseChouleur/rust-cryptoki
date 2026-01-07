@@ -45,10 +45,10 @@ pub fn get_logs() -> Vec<(Level, String)> {
         .unwrap_or_default()
 }
 
-pub fn logs_contain_warning(substring: &str) -> bool {
+pub fn logs_contain_error(substring: &str) -> bool {
     get_logs()
         .iter()
-        .any(|(l, msg)| *l == Level::Warn && msg.contains(substring))
+        .any(|(l, msg)| *l == Level::Error && msg.contains(substring))
 }
 
 pub fn print_logs() {

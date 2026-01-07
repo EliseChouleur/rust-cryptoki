@@ -9,7 +9,7 @@
 mod common;
 
 use common::mock_pkcs11::{get_mock_library, MockPkcs11};
-use common::test_logger::{clear_logs, init_logger, logs_contain_warning, print_logs};
+use common::test_logger::{clear_logs, init_logger, logs_contain_error, print_logs};
 use serial_test::serial;
 
 // ============================================================================
@@ -79,7 +79,7 @@ fn mock_session_close_after_token_removal_no_warning() {
     print_logs();
 
     assert!(
-        !logs_contain_warning("Failed to close session"),
+        !logs_contain_error("Failed to close session"),
         "Warning should NOT appear because close() was called explicitly"
     );
 }
@@ -122,7 +122,7 @@ fn mock_session_drop_without_close_after_token_removal_logs_warning() {
     print_logs();
 
     assert!(
-        logs_contain_warning("Failed to close session"),
+        logs_contain_error("Failed to close session"),
         "Warning SHOULD appear because close() was NOT called explicitly"
     );
 }
