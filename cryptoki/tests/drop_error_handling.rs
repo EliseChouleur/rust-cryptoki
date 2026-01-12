@@ -84,6 +84,58 @@ fn mock_session_close_after_token_removal_no_error() {
     );
 }
 
+/// Test that when using open_ro_session_no_drop, Drop does NOT attempt to close
+/// the session and does NOT log any error, even after token removal.
+///
+/// Scenario:
+/// 1. Open a session with open_ro_session_no_drop (close_on_drop=false)
+/// 2. Simulate token removal
+/// 3. Drop the session WITHOUT calling close()
+/// 4. Verify NO error is logged (because Drop should not attempt to close)
+#[test]
+#[serial]
+fn mock_session_no_drop_after_token_removal_no_error() {
+    init_logger();
+    clear_logs();
+
+    let mock = match MockPkcs11::new() {
+        Some(m) => m,
+        None => {
+            println!("Skipping test: not using mock PKCS#11 library");
+            return;
+        }
+    };
+    mock.reset();
+
+    let pkcs11 = get_mock_library().unwrap();
+
+    // 1. Open a session with open_ro_session_no_drop
+    let slot = pkcs11.get_slots_with_token().unwrap()[0];
+    let session = pkcs11.open_ro_session_no_drop(slot).unwrap();
+
+    // Verify the session is valid
+    assert!(
+        session.get_session_info().is_ok(),
+        "Session should be valid initially"
+    );
+
+    // 2. Simulate token removal
+    mock.simulate_token_removal();
+
+    // 3. Drop the session WITHOUT calling close()
+    // Since close_on_drop=false, Drop should not attempt to close
+    drop(session);
+
+    // 4. Verify that NO error was logged
+    println!("Captured logs:");
+    print_logs();
+
+    assert!(
+        !logs_contain_error("Failed to close session"),
+        "Error should NOT appear because open_ro_session_no_drop was used"
+    );
+}
+
 /// Test that when a session is dropped without explicit close() after token removal,
 /// an error IS logged (this is expected behavior for unexpected errors).
 #[test]
