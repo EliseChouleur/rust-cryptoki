@@ -4,7 +4,7 @@
 //!
 //! These tests use a mock PKCS#11 library that can simulate token removal,
 //! allowing us to verify that Drop implementations handle errors gracefully
-//! without logging warnings when close() was called explicitly.
+//! without logging an error when close() was called explicitly.
 
 mod common;
 
@@ -17,17 +17,17 @@ use serial_test::serial;
 // ============================================================================
 
 /// Test that when close() is called explicitly after token removal,
-/// no warning is logged during Drop.
+/// no error is logged during Drop.
 ///
 /// Scenario:
 /// 1. Open a valid session
 /// 2. Simulate token removal (via mock API)
 /// 3. get_session_info() returns error (handle invalid)
 /// 4. close() is called explicitly and error is ignored
-/// 5. Drop runs but should NOT log a warning because close() was called
+/// 5. Drop runs but should NOT log an error because close() was called
 #[test]
 #[serial]
-fn mock_session_close_after_token_removal_no_warning() {
+fn mock_session_close_after_token_removal_no_error() {
     init_logger();
     clear_logs();
 
@@ -72,23 +72,23 @@ fn mock_session_close_after_token_removal_no_warning() {
     );
 
     // 5. Drop has been called, but since close() set closed=true,
-    //    it should not log a warning
+    //    it should not log an error
 
-    // 6. Verify that NO warning was logged
+    // 6. Verify that NO error was logged
     println!("Captured logs:");
     print_logs();
 
     assert!(
         !logs_contain_error("Failed to close session"),
-        "Warning should NOT appear because close() was called explicitly"
+        "Error should NOT appear because close() was called explicitly"
     );
 }
 
 /// Test that when a session is dropped without explicit close() after token removal,
-/// a warning IS logged (this is expected behavior for unexpected errors).
+/// an error IS logged (this is expected behavior for unexpected errors).
 #[test]
 #[serial]
-fn mock_session_drop_without_close_after_token_removal_logs_warning() {
+fn mock_session_drop_without_close_after_token_removal_logs_error() {
     init_logger();
     clear_logs();
 
@@ -114,15 +114,15 @@ fn mock_session_drop_without_close_after_token_removal_logs_warning() {
     mock.simulate_token_removal();
 
     // Drop the session WITHOUT calling close()
-    // This should trigger the Drop warning
+    // This should trigger the Drop error
     drop(session);
 
-    // Verify that a warning WAS logged
+    // Verify that an error WAS logged
     println!("Captured logs:");
     print_logs();
 
     assert!(
         logs_contain_error("Failed to close session"),
-        "Warning SHOULD appear because close() was NOT called explicitly"
+        "Error SHOULD appear because close() was NOT called explicitly"
     );
 }
