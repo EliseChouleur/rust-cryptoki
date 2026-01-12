@@ -151,7 +151,6 @@ jobs:
       - name: Run mock tests
         env:
           TEST_PKCS11_MODULE: ${{ github.workspace }}/cryptoki/tests/mock_pkcs11/libmockpkcs11.so
-          RUST_LOG: warn
         run: cargo test mock
 
   build-windows:
