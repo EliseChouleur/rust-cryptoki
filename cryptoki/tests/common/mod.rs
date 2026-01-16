@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #![allow(dead_code)]
 
-pub mod mock_pkcs11;
 pub mod test_logger;
 
 use cryptoki::context::Function;
