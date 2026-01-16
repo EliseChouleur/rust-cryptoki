@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #![allow(dead_code)]
 
-pub mod test_logger;
-
 use cryptoki::context::Function;
 use cryptoki::context::{CInitializeArgs, CInitializeFlags, Pkcs11};
 use cryptoki::error::{Error, RvError};
