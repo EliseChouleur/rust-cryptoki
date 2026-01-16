@@ -29,9 +29,14 @@ pub use object_management::ObjectHandleIterator;
 pub use session_info::{SessionInfo, SessionState};
 pub use validation::ValidationFlagsType;
 
-#[derive(Debug, PartialEq)]
-pub(crate) enum CloseOnDrop {
+/// Controls whether a session should be automatically closed when dropped.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CloseOnDrop {
+    /// The session will be automatically closed when dropped.
     AutomaticallyCloseSession,
+    /// The session will NOT be automatically closed when dropped.
+    /// Use this when you want to manage the session lifetime manually
+    /// or when passing session handles to other code.
     DoNotClose,
 }
 
@@ -75,6 +80,27 @@ unsafe impl Send for Session {}
 
 impl Session {
     pub(crate) fn new(
+        handle: CK_SESSION_HANDLE,
+        client: Pkcs11,
+        close_on_drop: CloseOnDrop,
+    ) -> Self {
+        Session {
+            handle,
+            client,
+            _guard: PhantomData,
+            close_on_drop,
+            closed: Cell::new(false),
+        }
+    }
+
+    /// Create a new session from a raw handle.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe because the caller must ensure that the handle is valid
+    /// and that the `Pkcs11` instance is the one that created the session.
+    /// Using an invalid handle will cause errors when the session is used or dropped.
+    pub unsafe fn new_from_raw(
         handle: CK_SESSION_HANDLE,
         client: Pkcs11,
         close_on_drop: CloseOnDrop,
